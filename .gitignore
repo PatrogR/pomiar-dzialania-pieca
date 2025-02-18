@@ -1,5 +1,6 @@
 *.pyc
 __pycache__/
+csv_saves/
 *.log
 .env
 *.ini

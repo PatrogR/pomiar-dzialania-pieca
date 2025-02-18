@@ -76,7 +76,7 @@ def write_to_csv(data, csv_filename):
     with open(csv_filename, mode='a', newline='') as file:
         writer = csv.writer(file, delimiter=";")
         if file.tell() == 0:
-            writer.writerow(['Timestamp', 'Status'])  # Nagłówek pliku, jeśli jest pusty
+            writer.writerow(['Datetime', 'Status'])  # Nagłówek pliku, jeśli jest pusty
         writer.writerow([current_time, data])
 
 
@@ -106,6 +106,7 @@ def monitor_power_threshold(url, csv_folder, file_name, delay_value, threshold_v
     start_time = None  # Czas rozpoczęcia przekroczenia progu
     recorded_on = False  # Flaga określająca, czy "turn on" zostało zapisane
     recorded_off = False  # Flaga określająca, czy "turn off" zostało zapisane
+    last_power_value = None  # Zmienna do przechowywania ostatniej wartości mocy wydrukowanej na konsoli
 
     while True:
         power_value = deserialize_json_to_object(url)
@@ -113,7 +114,10 @@ def monitor_power_threshold(url, csv_folder, file_name, delay_value, threshold_v
         csv_filename = os.path.join(csv_folder, f"{file_name}_{current_date}.csv")
 
         if power_value is not None:
-            print(f"{format_timestamp()}: {power_value}W")  # Wyświetlanie bieżącej mocy
+            # Sprawdzanie, czy wartość mocy różni się od poprzedniej o co najmniej 20W
+            if last_power_value is None or abs(power_value - last_power_value) >= 20:
+                print(f"{datetime.now().strftime("%H:%M:%S")} -> {power_value}W")  # Wyświetlanie bieżącej mocy
+                last_power_value = power_value  # Aktualizowanie ostatniej wartości mocy
 
             if power_value > threshold_value:
                 if not above_threshold:
@@ -121,12 +125,12 @@ def monitor_power_threshold(url, csv_folder, file_name, delay_value, threshold_v
                     above_threshold = True
                     recorded_on = False  # Resetowanie flagi "turn on"
                 elif time.time() - start_time >= delay_value and not recorded_on:
-                    write_to_csv('turn on', csv_filename)
+                    write_to_csv('Turn on', csv_filename)
                     recorded_on = True
                     recorded_off = False  # Resetowanie flagi "turn off"
             elif power_value < threshold_value - 5:
                 if above_threshold and not recorded_off:
-                    write_to_csv('turn off', csv_filename)
+                    write_to_csv('Turn off', csv_filename)
                     recorded_off = True
                     recorded_on = False  # Resetowanie flagi "turn on"
                     above_threshold = False  # Resetowanie stanu progu
