@@ -76,7 +76,7 @@ def write_to_csv(data, csv_filename):
     with open(csv_filename, mode='a', newline='') as file:
         writer = csv.writer(file, delimiter=";")
         if file.tell() == 0:
-            writer.writerow(['Datetime', 'Status'])  # Nagłówek pliku, jeśli jest pusty
+            writer.writerow(['Datetime', 'State'])  # Nagłówek pliku, jeśli jest pusty
         writer.writerow([current_time, data])
 
 
